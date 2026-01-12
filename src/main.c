@@ -6,7 +6,7 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:07 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/11 23:05:50 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/11 23:08:19 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,17 @@ char **get_path(char **envp)
 	return (path);
 }
 
+char **build_cmd(char **path, char *cmd)
+{
+	int	i;
+
+	i = -1;
+	while (path[++i])
+		path[i]	 = ft_strjoin(path[i], cmd);
+	return (path);
+}
+
+
 int	main(int argc, char **argv, char **envp)
 {
 	char **result;
@@ -48,7 +59,7 @@ int	main(int argc, char **argv, char **envp)
 
 	i = 0;
 	validate_args(argc, argv);
-	result = get_path(envp);
+	result = build_cmd(get_path(envp), argv[2]);
 	while (result[i])
 	{
 		ft_printf("%s\n", result[i]);
