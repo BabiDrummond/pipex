@@ -1,0 +1,19 @@
+perror: printa uma mensagem de erro do sistema.
+strerror: retorna uma string com a descrição do erro referente ao número passado como argumento.
+access: checa permissões do usuário para um determinado arquivo.
+execve: executa o programa referido pelo path. O programa chamador é substituído por um novo, como novo stack, heap, etc.
+exit: termina um processo.
+fork: cria um processo filho, duplicando o processo chamador.
+pipe: cria um pipe, um canal de comunicação entre processos. pipe recebe um array de fds (int pipefd[2]). pipefd[0] é de onde o pipe vai ler e pipefd[1] é onde vai escrever.
+unlink: deleta um nome do filesystem.
+wait: suspende a execução da thread chamadora até um de seus filhos terminar.
+waitpid: suspende a execução da thread chamadora até que um filho especificado por pid mude de estado.
+dup: duplica um file descriptor.
+dup2: duplica um file descriptor e usa como novo número (fd) o que for especificado em newfd.
+
+possible implementation:
+open -> dup2
+open -> dup2
+pipe (newfds)
+fork -> execve -> wait
+fork -> execve -> wait
