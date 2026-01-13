@@ -6,64 +6,74 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:07 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/11 23:08:19 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/13 20:08:28 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	validate_args(int count, char **args)
+void	validate_args(int count)
 {
 	if (count != 5)
 		ft_printf("Invalid arguments. "
 			"Usage: ./pipex [file1] [cmd1] [cmd2] [file2]\n");
-	(void) args;
 }
 
-char **get_path(char **envp)
+void	get_path(t_pipex *pipex, char **envp)
 {
-	char	**path;
 	int		i;
 
-	i = -1;
-	while (envp[++i])
+	i = 0;
+	while (envp[i])
 	{
 		if (ft_strncmp(envp[i], "PATH=", 5) == 0)
 		{
-			path = ft_split(envp[i] + 5, ':');
+			pipex->path = ft_split(envp[i] + 5, ':');
 			break ;
 		}
+		i++;
 	}
-	i = -1;
-	while (path[++i])
-		if (ft_strncmp(path[i] + ft_strlen(path[i]) - 1, "/", 1) != 0)
-			path[i] = ft_strjoin(path[i], "/");
-	return (path);
 }
 
-char **build_cmd(char **path, char *cmd)
+void	get_cmd(t_pipex *pipex, char **path, char *cmd)
 {
-	int	i;
+	char	*tmp;
+	int		i;
 
-	i = -1;
-	while (path[++i])
-		path[i]	 = ft_strjoin(path[i], cmd);
-	return (path);
+	i = 0;
+	while (path[i])
+	{
+		if (ft_strncmp(path[i] + ft_strlen(path[i]) - 1, "/", 1) != 0)
+		{
+			tmp = ft_strjoin(path[i], "/");
+			pipex->cmd = ft_strjoin(tmp, cmd);
+			free(tmp);
+			if (!access(pipex->cmd, F_OK) && ft_printf("found path: %s\n", pipex->cmd))
+				break ;
+		}
+		free(pipex->cmd);
+		pipex->cmd = NULL;
+		i++;
+	}
 }
 
+void open_file(char *file_name)
+{
+	int	fd;
+
+	fd = open(file_name, O_RDONLY);
+	if (fd == -1)
+		ft_printf("Error opening file %s.\n", file_name);
+}
 
 int	main(int argc, char **argv, char **envp)
 {
-	char **result;
-	int i;
+	t_pipex	pipex;
 
-	i = 0;
-	validate_args(argc, argv);
-	result = build_cmd(get_path(envp), argv[2]);
-	while (result[i])
-	{
-		ft_printf("%s\n", result[i]);
-		i++;
-	}
+	validate_args(argc);
+	get_path(&pipex, envp);
+	get_cmd(&pipex, pipex.path, argv[2]);
+	ft_matrix_free(pipex.path);
+	free(pipex.cmd);
 	return (0);
 }

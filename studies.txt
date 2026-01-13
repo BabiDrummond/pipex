@@ -17,3 +17,27 @@ open -> dup2
 pipe (newfds)
 fork -> execve -> wait
 fork -> execve -> wait
+
+1. abrir infile
+2. abrir outfile
+3. guardar ambos fds
+4. criar pipe
+5. criar fork
+filho 1:
+- dup2(infile, 0)
+- dup2(pipefd[1], 1)
+- close(pipefd[0])
+- close(pipefd[1])
+- close(infile)
+- execve(cmd1)
+filho 2:
+- dup2(outfile, 1)
+- dup2(pipefd[0], 0)
+- close(pipefd[1])
+- close(pipefd[0])
+- close(outfile)
+- execve(cmd2)
+6. close(pipefd[0])
+7. close(pipefd[1])
+8. waitpid(filho1)
+9. waitpid(filho2)
