@@ -6,7 +6,7 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:35 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/13 19:07:14 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/13 20:20:02 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,13 @@
 # include <fcntl.h>
 # include "../libft/include/libft.h"
 
-typedef struct s_pipex
+typedef struct s_data
 {
 	int		fd_infile;
 	int		fd_outfile;
 	int		pipefds[2];
 	char	**path;
 	char	*cmd;
-}	t_pipex;
+}	t_data;
 
 #endif

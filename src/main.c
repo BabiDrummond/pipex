@@ -6,7 +6,7 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:07 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/13 20:08:28 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/13 20:25:53 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ void	validate_args(int count)
 			"Usage: ./pipex [file1] [cmd1] [cmd2] [file2]\n");
 }
 
-void	get_path(t_pipex *pipex, char **envp)
+void	get_path(t_data *data, char **envp)
 {
 	int		i;
 
@@ -28,14 +28,14 @@ void	get_path(t_pipex *pipex, char **envp)
 	{
 		if (ft_strncmp(envp[i], "PATH=", 5) == 0)
 		{
-			pipex->path = ft_split(envp[i] + 5, ':');
+			data->path = ft_split(envp[i] + 5, ':');
 			break ;
 		}
 		i++;
 	}
 }
 
-void	get_cmd(t_pipex *pipex, char **path, char *cmd)
+void	build_cmd(t_data *data, char **path, char *cmd)
 {
 	char	*tmp;
 	int		i;
@@ -46,34 +46,40 @@ void	get_cmd(t_pipex *pipex, char **path, char *cmd)
 		if (ft_strncmp(path[i] + ft_strlen(path[i]) - 1, "/", 1) != 0)
 		{
 			tmp = ft_strjoin(path[i], "/");
-			pipex->cmd = ft_strjoin(tmp, cmd);
+			data->cmd = ft_strjoin(tmp, cmd);
 			free(tmp);
-			if (!access(pipex->cmd, F_OK) && ft_printf("found path: %s\n", pipex->cmd))
+			if (!access(data->cmd, F_OK) && ft_printf("found path: %s\n", data->cmd))
 				break ;
 		}
-		free(pipex->cmd);
-		pipex->cmd = NULL;
+		free(data->cmd);
+		data->cmd = NULL;
 		i++;
 	}
 }
 
-void open_file(char *file_name)
+void	read_files(t_data *data, char *infile, char *outfile)
 {
-	int	fd;
+	data->fd_infile = open(infile, O_RDONLY);
+	data->fd_outfile = open(outfile, O_WRONLY);
+	if (data->fd_infile == -1 || data->fd_outfile == -1)
+		ft_printf("Error opening file.\n");
+}
 
-	fd = open(file_name, O_RDONLY);
-	if (fd == -1)
-		ft_printf("Error opening file %s.\n", file_name);
+void	cleanup_program(t_data *data)
+{
+	ft_matrix_free(data->path);
+	if (data->cmd)
+		free(data->cmd);
 }
 
 int	main(int argc, char **argv, char **envp)
 {
-	t_pipex	pipex;
+	t_data	data;
 
 	validate_args(argc);
-	get_path(&pipex, envp);
-	get_cmd(&pipex, pipex.path, argv[2]);
-	ft_matrix_free(pipex.path);
-	free(pipex.cmd);
+	read_files(&data, argv[1], argv[4]);
+	get_path(&data, envp);
+	build_cmd(&data, data.path, argv[2]);
+	cleanup_program(&data);
 	return (0);
 }
