@@ -6,7 +6,7 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:35 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/13 20:20:02 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/13 20:46:53 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@ typedef struct s_data
 	int		fd_outfile;
 	int		pipefds[2];
 	char	**path;
-	char	*cmd;
 }	t_data;
 
 #endif
