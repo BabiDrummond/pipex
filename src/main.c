@@ -6,28 +6,13 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:07 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/13 20:55:06 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/13 22:16:29 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	validate_args(int count)
-{
-	if (count != 5)
-		ft_printf("Invalid arguments. "
-			"Usage: ./pipex [file1] [cmd1] [cmd2] [file2]\n");
-}
-
-void	read_files(t_data *data, char *infile, char *outfile)
-{
-	data->fd_infile = open(infile, O_RDONLY);
-	data->fd_outfile = open(outfile, O_WRONLY);
-	if (data->fd_infile == -1 || data->fd_outfile == -1)
-		ft_printf("Error opening file.\n");
-}
-
-void	get_path(t_data *data, char **envp)
+char	**get_path(char **envp)
 {
 	int		i;
 
@@ -35,12 +20,10 @@ void	get_path(t_data *data, char **envp)
 	while (envp[i])
 	{
 		if (ft_strncmp(envp[i], "PATH=", 5) == 0)
-		{
-			data->path = ft_split(envp[i] + 5, ':');
-			break ;
-		}
+			return (ft_split(envp[i] + 5, ':'));
 		i++;
 	}
+	return (NULL);
 }
 
 char	*build_cmd(char **path, char *cmd)
@@ -67,26 +50,58 @@ char	*build_cmd(char **path, char *cmd)
 	return (cmd_path);
 }
 
-void	fork_input(t_data *data, char *cmd_path, char *cmd)
+void	input_cmd(t_data *data)
 {
 	dup2(data->fd_infile, 0);
 	dup2(data->pipefds[1], 1);
 	close(data->pipefds[0]);
 	close(data->pipefds[1]);
 	close(data->fd_infile);
-	execve(cmd_path, cmd, NULL);
+	execve(data->path[0], &data->cmd[0], NULL);
+}
+
+void	output_cmd(t_data *data)
+{
+	dup2(data->fd_outfile, 1);
+	dup2(data->pipefds[0], 0);
+	close(data->pipefds[0]);
+	close(data->pipefds[1]);
+	close(data->fd_outfile);
+	execve(data->path[1], &data->cmd[1], NULL);
+}
+void	init_data(t_data *data, char **args, char **env)
+{
+	data->fd_infile = open(args[1], O_RDONLY);
+	data->fd_outfile = open(args[4], O_CREAT | O_TRUNC | O_RDWR, 0644);
+	if (data->fd_infile == -1 || data->fd_outfile == -1)
+		ft_printf("Error opening file.\n");
+	data->env_path = get_path(env);
+	data->cmd[0] = args[2];
+	data->cmd[1] = args[3];
+	data->path[0] = build_cmd(data->env_path, data->cmd[0]);
+	data->path[1] = build_cmd(data->env_path, data->cmd[1]);
+}
+
+void	cleanup_program(t_data *data)
+{
+	ft_matrix_free(data->env_path);
+	if (data->path[0])
+		free(data->path[0]);
+	if (data->path[1])
+		free(data->path[1]);
 }
 
 int	main(int argc, char **argv, char **envp)
 {
 	t_data	data;
 
-	validate_args(argc);
-	read_files(&data, argv[1], argv[4]);
-	get_path(&data, envp);
+	if (argc != 5)
+		ft_printf("Invalid arguments. "
+			"Usage: ./pipex [file1] [cmd1] [cmd2] [file2]\n");
+	init_data(&data, argv, envp);
 	pipe(data.pipefds);
-	fork_input(&data, build_cmd(data.path, argv[2]), argv[2]);
-	fork_output(&data, build_cmd(data.path, argv[3]), argv[3]);
-	ft_matrix_free(data.path);
+	//input_cmd(&data);
+	//output_cmd(&data);
+	cleanup_program(&data);
 	return (0);
 }
