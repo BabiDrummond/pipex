@@ -6,7 +6,7 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:07 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/14 22:05:42 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/15 20:17:20 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,35 +37,31 @@ char	*build_cmd_path(char **path, char *cmd)
 	{
 		if (ft_strncmp(path[i] + ft_strlen(path[i]) - 1, "/", 1) != 0)
 		{
-			cmd_path = ft_strjoin(path[i], "/");
-			tmp = ft_strjoin(cmd_path, cmd);
-			if (!access(tmp, F_OK))
-				break ;
+			tmp = ft_strjoin(path[i], "/");
+			cmd_path = ft_strjoin(tmp, cmd);
+			free(tmp);
+			if (!access(cmd_path, F_OK))
+				return (cmd_path);
 		}
 		free(cmd_path);
-		free(tmp);
 		cmd_path = NULL;
-		tmp = NULL;
 		i++;
 	}
-	free(tmp);
-	tmp = NULL;
-	return (cmd_path);
+	return (NULL);
 }
 
-void	init_data(t_data *data, char **args, char **env)
+void	init_data(t_data *data, int count, char **args, char **env)
 {
-	data->fd_infile = open(args[1], O_RDONLY);
-	data->fd_outfile = open(args[4], O_CREAT | O_TRUNC | O_RDWR, 0644);
-	if (data->fd_infile == -1 || data->fd_outfile == -1)
-		ft_printf("Error opening file.\n");
+	if (count != 5)
+		ft_printf("Invalid arguments. "
+			"Usage: ./pipex [file1] [cmd1] [cmd2] [file2]\n");
+	data->infile = args[1];
+	data->outfile = args[4];
 	data->env_path = get_env_path(env);
 	data->cmd1 = ft_split(args[2], ' ');
 	data->cmd2 = ft_split(args[3], ' ');
 	data->path[0] = build_cmd_path(data->env_path, data->cmd1[0]);
 	data->path[1] = build_cmd_path(data->env_path, data->cmd2[0]);
-	ft_printf("path 1: %s\n", data->path[0]);
-	ft_printf("path 2: %s\n", data->path[1]);
 }
 
 void	cleanup_program(t_data *data)
@@ -79,54 +75,64 @@ void	cleanup_program(t_data *data)
 		free(data->path[1]);
 }
 
-void	create_fork(t_data *data)
+void	first_child(t_data *data, char **env)
 {
-	data->pid1 = fork();
-	if (data->pid1 == - 1)
-		ft_printf("Error to create fork.\n");
-	if (data->pid1 != 0)
-	{
-		data->pid2 = fork();
-		if (data->pid2 == - 1)
-			ft_printf("Error to create fork.\n");
-	}
-	if (data->pid1 > 0 && data->pid2 > 0)
-		if (close(data->pipefds[0]) == -1
-			|| close(data->pipefds[1]) == -1)
-			ft_printf("Error to close pipefds.\n");
+	int	fd_infile;
+	
+	close(data->pipefds[0]);
+	dup2(data->pipefds[1], 1);
+	close(data->pipefds[1]);
+	fd_infile = open(data->infile, O_RDONLY);
+	if (fd_infile == -1)
+		ft_printf("Error opening infile.\n");
+	dup2(fd_infile, 0);
+	close(fd_infile);
+	execve(data->path[0], data->cmd1, env);
 }
 
-void	execute_cmd(t_data *data)
+void	second_child(t_data *data, char **env)
 {
-	if (data->pid1 == 0)
-	{
-		dup2(data->fd_infile, 0);
-		dup2(data->pipefds[1], 1);
-		close(data->fd_infile);
-		execve(data->path[0], data->cmd1, NULL);
-	}
+	int	fd_outfile;
+	
+	close(data->pipefds[1]);
+	dup2(data->pipefds[0], 0);
+	close(data->pipefds[0]);
+	fd_outfile = open(data->outfile, O_CREAT | O_TRUNC | O_RDWR, 0644);
+	if (fd_outfile == -1)
+		ft_printf("Error opening outfile.\n");
+	dup2(fd_outfile, 1);
+	close(fd_outfile);
+	execve(data->path[1], data->cmd2, env);
+}
+
+void	parent_process(t_data *data, char **env)
+{
+	pipe(data->pipefds);
+	data->pid1 = fork();
+	if (data->pid1 == -1)
+		ft_printf("Error to create first child.\n");
+	else if (data->pid1 == 0)
+		first_child(data, env);
+	data->pid2 = fork();
+	if (data->pid2 == -1)
+		ft_printf("Error to create second child.\n");
 	else if (data->pid2 == 0)
+		second_child(data, env);
+	if (data->pid1 > 0 && data->pid2 > 0)
 	{
-		dup2(data->fd_outfile, 1);
-		dup2(data->pipefds[0], 0);
-		close(data->fd_outfile);
-		execve(data->path[1], data->cmd2, NULL);
+		close(data->pipefds[0]);
+		close(data->pipefds[1]);
 	}
+	waitpid(data->pid1, NULL, 0);
+	waitpid(data->pid2, NULL, 0);
 }
 
 int	main(int argc, char **argv, char **envp)
 {
 	t_data	data;
 
-	if (argc != 5)
-		ft_printf("Invalid arguments. "
-			"Usage: ./pipex [file1] [cmd1] [cmd2] [file2]\n");
-	init_data(&data, argv, envp);
-	pipe(data.pipefds);
-	create_fork(&data);
-	execute_cmd(&data);
-	waitpid(data.pid1, 0, 0);
-	waitpid(data.pid2, 0, 0);
+	init_data(&data, argc, argv, envp);
+	parent_process(&data, envp);
 	cleanup_program(&data);
 	return (0);
 }
