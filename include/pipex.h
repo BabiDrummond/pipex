@@ -6,7 +6,7 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:35 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/13 22:00:01 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/14 21:55:13 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <fcntl.h>
+# include <sys/wait.h>
 # include "../libft/include/libft.h"
 
 typedef struct s_data
@@ -23,9 +24,12 @@ typedef struct s_data
 	int		fd_infile;
 	int		fd_outfile;
 	int		pipefds[2];
-	char	**env_path;
-	char	*cmd[2];
 	char	*path[2];
+	char	**cmd1;
+	char	**cmd2;
+	char	**env_path;
+	pid_t	pid1;
+	pid_t	pid2;
 }	t_data;
 
 #endif
