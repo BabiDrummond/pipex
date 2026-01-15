@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   pipex.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:07 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/15 20:53:53 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/15 20:56:46 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ void	create_children(t_data *data, char **env)
 void	first_child(t_data *data, char **env)
 {
 	int	fd_infile;
-	
+
 	close(data->pipefd[0]);
 	dup2(data->pipefd[1], 1);
 	close(data->pipefd[1]);
@@ -72,7 +72,7 @@ void	first_child(t_data *data, char **env)
 void	second_child(t_data *data, char **env)
 {
 	int	fd_outfile;
-	
+
 	close(data->pipefd[1]);
 	dup2(data->pipefd[0], 0);
 	close(data->pipefd[0]);
