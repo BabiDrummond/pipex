@@ -7,7 +7,8 @@ LIBFT_DIR = libft
 LIBFT = $(LIBFT_DIR)/libft.a
 
 SRCS_DIR = src/
-SRCS = main.c
+SRCS = pipex.c \
+		utils.c
 OBJS_DIR = objs/
 OBJS = $(SRCS:%.c=$(OBJS_DIR)%.o)
 
