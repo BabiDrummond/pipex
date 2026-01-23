@@ -6,7 +6,7 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 16:58:07 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/15 20:56:46 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/01/23 19:32:12 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@ void	execute_parent(t_data *data, char **env)
 {
 	pipe(data->pipefd);
 	create_children(data, env);
+	close(data->pipefd[0]);
+	close(data->pipefd[1]);
 	waitpid(data->pid1, NULL, 0);
 	waitpid(data->pid2, NULL, 0);
 }
@@ -47,19 +49,14 @@ void	create_children(t_data *data, char **env)
 		exit_cleanup(data, CREATE_FORK);
 	else if (data->pid2 == 0)
 		second_child(data, env);
-	if (data->pid1 > 0 && data->pid2 > 0)
-	{
-		close(data->pipefd[0]);
-		close(data->pipefd[1]);
-	}
 }
 
 void	first_child(t_data *data, char **env)
 {
 	int	fd_infile;
 
-	close(data->pipefd[0]);
 	dup2(data->pipefd[1], 1);
+	close(data->pipefd[0]);
 	close(data->pipefd[1]);
 	fd_infile = open(data->infile, O_RDONLY);
 	if (fd_infile == -1)
@@ -73,9 +70,9 @@ void	second_child(t_data *data, char **env)
 {
 	int	fd_outfile;
 
-	close(data->pipefd[1]);
 	dup2(data->pipefd[0], 0);
 	close(data->pipefd[0]);
+	close(data->pipefd[1]);
 	fd_outfile = open(data->outfile, O_CREAT | O_TRUNC | O_RDWR, 0644);
 	if (fd_outfile == -1)
 		exit_cleanup(data, OPEN_FILE);
