@@ -6,7 +6,7 @@
 /*   By: bmoreira <bmoreira@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 20:51:28 by bmoreira          #+#    #+#             */
-/*   Updated: 2026/01/15 20:52:46 by bmoreira         ###   ########.fr       */
+/*   Updated: 2026/02/08 00:35:20 by bmoreira         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,17 +37,20 @@ void	init_data(t_data *data, int count, char **args, char **env)
 void	exit_cleanup(t_data *data, t_error error)
 {
 	if (error == INVALID_ARGS)
+	{
 		ft_printf("Invalid arguments. "
 			"Usage: ./pipex [file1] [cmd1] [cmd2] [file2]\n");
+		exit (0);
+	}
 	else if (error == OPEN_FILE)
 		ft_printf("Error opening file.\n");
 	else if (error == CREATE_FORK)
 		ft_printf("Error to create child.\n");
 	else if (error == INVALID_CMD)
 		ft_printf("Invalid command provided.\n");
-	ft_matrix_free(data->env_path);
-	ft_matrix_free(data->cmd1);
-	ft_matrix_free(data->cmd2);
+	ft_split_free(data->env_path);
+	ft_split_free(data->cmd1);
+	ft_split_free(data->cmd2);
 	if (data->path[0])
 		free(data->path[0]);
 	if (data->path[1])
