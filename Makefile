@@ -16,23 +16,23 @@ all: $(NAME)
 
 $(NAME): $(LIBFT) $(OBJS)
 	@$(CC) $(OBJS) $(LIBFT) -o $(NAME)
-	@echo -n "\033[0;32mGenerated pipex\n"
+	@echo "\033[0;32mGenerated pipex\033[0m"
 
 $(OBJS_DIR)%.o: $(SRCS_DIR)%.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
-	@echo "\033[95mCompiling $(notdir $<)"
+	@echo "\033[95mCompiling \033[0m$(notdir $<)"
 
 $(LIBFT):
 	@make --no-print-directory -C $(LIBFT_DIR)
 
 clean:
-	@echo "\033[0;34mCleaning pipex objects"
+	@echo "\033[0;34mCleaning pipex objects\033[0m"
 	@rm -rf $(OBJS_DIR)
 	@make --no-print-directory -C $(LIBFT_DIR) clean
 
 fclean: clean
-	@echo "\033[0;34mCleaning pipex"
+	@echo "\033[0;34mCleaning pipex\033[0m"
 	@rm -f $(NAME)
 	@make --no-print-directory -C $(LIBFT_DIR) fclean
 
